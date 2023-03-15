@@ -1,0 +1,16 @@
+
+FROM node:12
+WORKDIR /app
+COPY *.json /app/
+COPY */*.d.ts /app/
+COPY . .
+RUN npm install --legacy-peer-deps
+RUN npm install -g typescript
+RUN npm install -g nodemon
+CMD ["npm","start"]
+EXPOSE 3000
+
+
+
+
+EXPOSE 3000

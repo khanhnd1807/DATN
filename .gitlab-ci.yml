@@ -1,0 +1,78 @@
+variables:
+  IMAGE_NAME: khanhnd1807/demo-fe-wsm-app
+  IMAGE_TAG: wsm
+
+stages:
+  - test
+  - build
+  - deploy
+
+test:
+  stage: test
+  image: node:16
+  services:
+    - name: mysql:8.0
+      alias: mysql_test
+  variables:
+    DB_NAME: $DB_NAME
+    MYSQL_ROOT_PASSWORD: $MYSQL_ROOT_PASSWORD
+    DB_PASS: $DB_PASS
+  before_script:
+     - cd frontendwsm
+     - npm install --legacy-peer-deps
+     - cd ../backendwsm
+     - npm i
+     - cd ../frontendwsm
+  script:
+     - npx eslint 
+     - npx tsc 
+     - cd ../backendwsm/src/database
+     - pwd
+     - ls
+     - npx cross-env NODE_ENV=test npx sequelize-cli db:create --env test
+     - npx cross-env NODE_ENV=test npx sequelize-cli db:migrate --env test
+     - npm run test --env test
+  when: manual
+
+
+build_image:
+  stage: build
+  image: docker:20.10.16
+  services:
+    - docker:20.10.16-dind
+  variables:
+    DOCKER_TLS_CERTDIR: ""
+  before_script:
+    - docker login -u $REGISTRY_USER -p $REGISTRY_PASS
+  script:
+    - docker-compose build 
+    - docker-compose push
+  when: manual
+  only:
+    - main
+    - develop
+
+deploy:
+  stage: deploy
+  image: docker:20.10.16
+  before_script:
+    - 'command -v ssh-agent >/dev/null || ( apk add --update openssh )' 
+    - eval $(ssh-agent -s)
+    - echo "$SSH_KEY" | tr -d '\r' | ssh-add -
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - ssh-keyscan $EC2_IPADDRESS >> ~/.ssh/known_hosts
+    - echo $SSH_KEY > ~/.ssh/id_rsa
+
+    - pwd
+    - ls -l
+  script:
+    - ssh -t -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ubuntu@10.0.1.150 "cd /home/ubuntu/projectwsm && git fetch && git checkout -f origin/main && bash deploy.sh"
+  only:
+    - main
+    - develop
+  when: manual
+
+  
+    
+

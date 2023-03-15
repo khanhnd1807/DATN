@@ -1,0 +1,31 @@
+
+ 
+ {
+  "development": {
+    "username":  "root",
+    "password": "admin",
+    "database": "wsm",
+    "port": "3306",
+    "logging": true,
+    "host": "mysql",
+    "dialect": "mysql"
+  },
+
+  "test": {
+    "username":  "root",
+    "logging": false,
+    "password": "admin",
+    "database": "wsm_test",
+    "host": "mysql",
+    "dialect": "mysql"
+  },
+
+  "production": {
+    "username":  "root",
+    "password": "admin",
+    "logging": false,
+    "database": "wsm",
+    "host":  "mysql",
+    "dialect": "mysql"
+  }
+}
